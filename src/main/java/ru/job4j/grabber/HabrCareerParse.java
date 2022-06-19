@@ -18,6 +18,7 @@ public class HabrCareerParse {
         for (int i = 1; i < 6; i++) {
             printPage(i);
         }
+        new HabrCareerParse().retrieveDescription("https://career.habr.com/vacancies/1000101200");
     }
 
     public static void printPage(int pageNumber) throws IOException {
@@ -39,5 +40,13 @@ public class HabrCareerParse {
             String link = String.format("%s%s", SOURCE_LINK, linkElement.attr("href"));
             System.out.printf("%s %s %s %n", vacancyName, link, dateTime);
         });
+    }
+
+    private String retrieveDescription(String link) throws IOException {
+        Connection connection = Jsoup.connect(link);
+        Document document = connection.get();
+        Element fullDescription = document.select(".style-ugc").first();
+
+        return fullDescription.toString();
     }
 }
