@@ -5,27 +5,41 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import ru.job4j.grabber.entities.Post;
+import ru.job4j.grabber.utils.DateTimeParser;
+import ru.job4j.grabber.utils.HabrCareerDateTimeParser;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-public class HabrCareerParse {
+public class HabrCareerParse implements Parse {
 
     private static final String SOURCE_LINK = "https://career.habr.com";
-
     private static final String PAGE_LINK = String.format("%s/vacancies/java_developer", SOURCE_LINK);
+    private static final int PAGES_TO_PARSE = 1;
 
-    public static void main(String[] args) throws IOException {
-        for (int i = 1; i < 6; i++) {
-            printPage(i);
-        }
-        new HabrCareerParse().retrieveDescription("https://career.habr.com/vacancies/1000101200");
+    private final DateTimeParser dateTimeParser;
+
+    public static void main(String[] args) {
+        System.out.println(new HabrCareerParse(new HabrCareerDateTimeParser()).list("_"));
     }
 
-    public static void printPage(int pageNumber) throws IOException {
+    public HabrCareerParse(DateTimeParser dateTimeParser) {
+        this.dateTimeParser = dateTimeParser;
+    }
 
-        System.out.println(String.format("----- Страница %d -------", pageNumber));
 
-        Connection connection = Jsoup.connect(PAGE_LINK + String.format("?page=%d", pageNumber));
+    private String retrieveDescription(String link) throws IOException {
+        Connection connection = Jsoup.connect(link);
+        Document document = connection.get();
+        Element fullDescription = document.select(".style-ugc").first();
+
+        return fullDescription.toString();
+    }
+
+    private void writePageToList(List<Post> list, String sourceLink) throws IOException {
+        Connection connection = Jsoup.connect(sourceLink);
         Document document = connection.get();
         Elements rows = document.select(".vacancy-card__inner");
         rows.forEach(row -> {
@@ -34,19 +48,32 @@ public class HabrCareerParse {
             String vacancyName = titleElement.text();
 
             Element dateElement = row.select(".vacancy-card__date").first();
-            Element dateLinkElement = dateElement.child(0);
-            String dateTime = dateLinkElement.attr("datetime");
+            Element dateInnerElement = dateElement.child(0);
+            String dateTime = dateInnerElement.attr("datetime");
 
             String link = String.format("%s%s", SOURCE_LINK, linkElement.attr("href"));
-            System.out.printf("%s %s %s %n", vacancyName, link, dateTime);
+            String description = "";
+            try {
+                description = retrieveDescription(link);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            list.add(new Post(vacancyName, link, description, dateTimeParser.parse(dateTime)));
+
         });
     }
 
-    private String retrieveDescription(String link) throws IOException {
-        Connection connection = Jsoup.connect(link);
-        Document document = connection.get();
-        Element fullDescription = document.select(".style-ugc").first();
-
-        return fullDescription.toString();
+    @Override
+    public List<Post> list(String link) {
+        List<Post> posts = new ArrayList<>(100);
+        try {
+            for (int i = 1; i <= PAGES_TO_PARSE; i++) {
+                writePageToList(posts, PAGE_LINK + String.format("?page=%d", i));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return posts;
     }
 }
