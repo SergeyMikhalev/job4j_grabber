@@ -31,7 +31,7 @@ public class HabrCareerParse implements Parse {
 
     @Override
     public List<Post> list(String link) {
-        List<Post> posts = new ArrayList<>(100);
+        List<Post> posts = new ArrayList<>(125);
         try {
             for (int i = 1; i <= PAGES_TO_PARSE; i++) {
                 writePageToList(posts, link + String.format("?page=%d", i));
