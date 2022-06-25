@@ -21,7 +21,7 @@ public class AlertRabbit {
 
     private static void initRabbitProps() throws IOException {
         rabbitProps = new Properties();
-        try (InputStream in = AlertRabbit.class.getClassLoader().getResourceAsStream("rabbit.properties")) {
+        try (InputStream in = AlertRabbit.class.getClassLoader().getResourceAsStream("app.properties")) {
             rabbitProps.load(in);
         }
     }
