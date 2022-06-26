@@ -9,7 +9,7 @@ import java.util.Properties;
 
 public class PsqlStore implements Store, AutoCloseable {
 
-    private static final String SAVE_QUERY = "INSERT INTO posts(name, link, description, created) VALUES (?,?,?,?)";
+    private static final String SAVE_QUERY = "INSERT INTO posts(name, link, description, created) VALUES (?,?,?,?) ON CONFLICT (link) DO NOTHING";
     private static final String GET_ALL_QUERY = "SELECT * FROM posts";
     private static final String FIND_BY_ID = "SELECT * FROM posts WHERE id=?";
 

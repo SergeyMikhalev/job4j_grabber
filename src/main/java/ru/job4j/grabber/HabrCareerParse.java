@@ -77,7 +77,7 @@ public class HabrCareerParse implements Parse {
         Document document = connection.get();
         Element fullDescription = document.select(".style-ugc").first();
 
-        return fullDescription.toString();
+        return fullDescription.text();
     }
 
 
